@@ -1,0 +1,6 @@
+langgraph
+langchain
+langchain-openai
+beautifulsoup4
+requests
+
