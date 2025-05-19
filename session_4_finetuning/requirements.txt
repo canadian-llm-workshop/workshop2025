@@ -5,3 +5,4 @@ accelerate==1.6.0
 peft==0.15.2
 bitsandbytes==0.45.5
 hf_xet==1.1.0
+tensorboardX

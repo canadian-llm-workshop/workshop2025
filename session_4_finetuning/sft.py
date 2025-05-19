@@ -31,7 +31,7 @@ def load_model(model_name):
     
     return model, tokenizer
 
-def instruction_tune_model(base_model, tokenizer, finetuning_dataset):
+def instruction_tune_model(base_model, tokenizer, finetuning_dataset, epochs=3):
     """Fine-tune the model on instruction data."""
     # LoRA configuration    
     lora_config = LoraConfig(
@@ -50,7 +50,7 @@ def instruction_tune_model(base_model, tokenizer, finetuning_dataset):
     # Training configuration
     training_args = SFTConfig(
         output_dir=trained_model_path,
-        num_train_epochs=3,
+        num_train_epochs=epochs,
         per_device_train_batch_size=4,
         gradient_accumulation_steps=8,
         learning_rate=1e-4,
@@ -95,14 +95,29 @@ def extract_date(text: str) -> str:
             continue   # keep scanning for the next brace block
     return ""
 
+
+def call_llm(model, tokenizer, prompt: str,
+             max_new_tokens: int = 256, temperature: float = 0.0) -> str:
+    with torch.no_grad():
+        out = model.generate(
+            **tokenizer(prompt, return_tensors="pt").to("cuda"),
+            max_new_tokens=max_new_tokens,
+            temperature=temperature,
+            do_sample=temperature > 0,
+        )
+    model_output = tokenizer.decode(out[0], skip_special_tokens=True)
+    return model_output.split('<|assistant|>')[-1].strip()
+
+
 def run_inference(
     model,
     tokenizer,
     hf_dataset,
     *,
-    system_prompt = None,  
-    max_samples: int | None = None):
-    model  = model.eval()
+    system_prompt: str | None = None,
+    max_samples: int | None = None,
+):
+    model.eval()
     records = []
     dataset_iter = hf_dataset if max_samples is None else hf_dataset.select(range(max_samples))
 
@@ -114,33 +129,28 @@ def run_inference(
         except ValueError:
             continue  # skip malformed rows
 
-        base_prompt   = (before + "OUTPUT:").strip()
-        groundtruth   = after.strip()              # {"date": "YYYY-MM-DD"}
+        base_prompt = f"{before}OUTPUT:".strip()
+        groundtruth = after.strip()
 
-        # prepend optional prompt section
+        # ---- build TinyLlama-style prompt ----------------------------------
+        messages = []
         if system_prompt:
-            prompt = f"{system_prompt.strip()}\n{base_prompt}"
-        else:
-            prompt = base_prompt
+            messages.append({"role": "system", "content": system_prompt.strip()})
+        messages.append({"role": "user", "content": base_prompt})
+        prompt = tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+        # --------------------------------------------------------------------
 
-        # generate
-        inputs = tokenizer(prompt, return_tensors="pt").to(device)
-        with torch.no_grad():
-            out = model.generate(
-                **inputs,
-                max_new_tokens=32,
-                temperature=0.0,
-                do_sample=False,
-            )
+        prediction = call_llm(model, tokenizer, prompt, max_new_tokens=32, temperature=0.0)
 
-        full_text  = tokenizer.decode(out[0], skip_special_tokens=True)
-        prediction = full_text[len(prompt):].strip()
-
-        records.append({
-            "input": prompt,
-            "groundtruth": groundtruth,
-            "prediction": prediction,
-        })
+        records.append(
+            {
+                "input": prompt,
+                "groundtruth": groundtruth,
+                "prediction": prediction,
+            }
+        )
 
     return clean_outputs(records)
 
