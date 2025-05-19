@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -6,9 +7,10 @@ from mcp.client.stdio import stdio_client
 
 async def main():
     # Define server parameters
+    server_script = str(Path(__file__).parent / "mcp-server-stdio.py")
     server_params = StdioServerParameters(
         command="python",  # The command to run your server
-        args=["simple-mcp-server.py", "--transport", "stdio"],  # Arguments to the command
+        args=[server_script, "--transport", "stdio"],  # Arguments to the command
     )
 
     # Connect to the server

@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "my server": {
+    "my-server": {
       "command": "python",
-      "args": ["simple-mcp-server.py", "--transport", "stdio"]
+      "args": ["mcp-server-stdio.py"]
     }
   }
 }
