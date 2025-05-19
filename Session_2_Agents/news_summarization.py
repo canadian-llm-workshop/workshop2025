@@ -14,11 +14,11 @@ from langgraph.graph import StateGraph
 
 
 def get_api_key(var: str):
-    return "CA8602B9F986BB30EB74452B041D2C86"
     if not os.environ.get(var):
         return getpass.getpass(f"{var}: ")
     else:
         return os.environ.get(var)
+
 API_KEY = get_api_key("API_KEY")
 llm = ChatOpenAI(model="Nova-Micro-v1", base_url="https://api.aibrary.dev/v0", api_key=API_KEY)
 
