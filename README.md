@@ -5,4 +5,5 @@ Session 1: Introduction to LLMs [Colab](https://colab.research.google.com/drive/
 Session 2: LLM Finetuning [Colab](https://colab.research.google.com/drive/1NALYIiyx5lpW_ZZ1qpSxVrM91QY_0Txg?usp=sharing)
 
 [Session 3 Slides](https://docs.google.com/presentation/d/1zgOoyGdRlBEaDvyZ_DeKS5KoH4TlUO-fdm-juNi_RRM/edit?usp=sharing)
+
 Session 3: Agentic AI [![Open Session 2 In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/canadian-llm-workshop/workshop2025/blob/main/Session_3_Agentic_AI/Agents/agents.ipynb)
